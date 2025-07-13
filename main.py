@@ -46,6 +46,7 @@ def load_or_train_model():
         
         # Encode target variable
         le = LabelEncoder()
+        le.fit(y)  # This line was missing!
         Y = le.transform(y)
         
         # Split data for training
