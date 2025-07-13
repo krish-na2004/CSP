@@ -10,16 +10,24 @@ app = Flask(__name__)
 
 
 # load databasedataset===================================
-sym_des = pd.read_csv("datasets/symtoms_df.csv")
-precautions = pd.read_csv("datasets/precautions_df.csv")
-workout = pd.read_csv("datasets/workout_df.csv")
-description = pd.read_csv("datasets/description.csv")
-medications = pd.read_csv('datasets/medications.csv')
-diets = pd.read_csv("datasets/diets.csv")
+try:
+    sym_des = pd.read_csv("datasets/symtoms_df.csv")
+    precautions = pd.read_csv("datasets/precautions_df.csv")
+    workout = pd.read_csv("datasets/workout_df.csv")
+    description = pd.read_csv("datasets/description.csv")
+    medications = pd.read_csv('datasets/medications.csv')
+    diets = pd.read_csv("datasets/diets.csv")
+    print("✅ All CSV files loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading CSV files: {e}")
 
 
 # load model===========================================
-svc = pickle.load(open('models/svc.pkl','rb'))
+try:
+    svc = pickle.load(open('models/svc.pkl','rb'))
+    print("✅ Model loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading model: {e}")
 
 
 #============================================================
