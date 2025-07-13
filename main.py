@@ -28,6 +28,38 @@ try:
     print("✅ Model loaded successfully")
 except Exception as e:
     print(f"❌ Error loading model: {e}")
+    print("🔄 Attempting to retrain model...")
+    try:
+        # Import training modules
+        from sklearn.model_selection import train_test_split
+        from sklearn.preprocessing import LabelEncoder
+        from sklearn.svm import SVC
+        
+        # Load and prepare training data
+        dataset = pd.read_csv('datasets/Training.csv')
+        X = dataset.drop('prognosis', axis=1)
+        y = dataset['prognosis']
+        
+        # Encode target variable
+        le = LabelEncoder()
+        le.fit(y)
+        Y = le.transform(y)
+        
+        # Split and train
+        X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=20)
+        svc = SVC(kernel='linear')
+        svc.fit(X_train, y_train)
+        
+        # Save the retrained model
+        pickle.dump(svc, open('models/svc.pkl', 'wb'))
+        print("✅ Model retrained and saved successfully")
+        
+    except Exception as retrain_error:
+        print(f"❌ Error retraining model: {retrain_error}")
+        # Create a dummy model as fallback
+        from sklearn.svm import SVC
+        svc = SVC(kernel='linear')
+        print("⚠️ Using dummy model - app may not work properly")
 
 
 #============================================================
