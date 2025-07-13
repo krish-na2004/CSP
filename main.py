@@ -23,43 +23,69 @@ except Exception as e:
 
 
 # load model===========================================
-try:
-    svc = pickle.load(open('models/svc.pkl','rb'))
-    print("✅ Model loaded successfully")
-except Exception as e:
-    print(f"❌ Error loading model: {e}")
-    print("🔄 Attempting to retrain model...")
+def load_or_train_model():
+    """Load existing model or train a new one if loading fails"""
+    global svc
+    
     try:
-        # Import training modules
-        from sklearn.model_selection import train_test_split
-        from sklearn.preprocessing import LabelEncoder
-        from sklearn.svm import SVC
+        # Try to load existing model
+        svc = pickle.load(open('models/svc.pkl','rb'))
+        print("✅ Model loaded successfully")
+        return True
+    except Exception as e:
+        print(f"❌ Error loading model: {e}")
+        print("🔄 Training new model from scratch...")
         
-        # Load and prepare training data
-        dataset = pd.read_csv('datasets/Training.csv')
-        X = dataset.drop('prognosis', axis=1)
-        y = dataset['prognosis']
-        
-        # Encode target variable
-        le = LabelEncoder()
-        le.fit(y)
-        Y = le.transform(y)
-        
-        # Split and train
-        X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=20)
-        svc = SVC(kernel='linear')
-        svc.fit(X_train, y_train)
-        
-        # Save the retrained model
-        pickle.dump(svc, open('models/svc.pkl', 'wb'))
-        print("✅ Model retrained and saved successfully")
-        
-    except Exception as retrain_error:
-        print(f"❌ Error retraining model: {retrain_error}")
-        # Create a dummy model as fallback
-        from sklearn.svm import SVC
-        svc = SVC(kernel='linear')
-        print("⚠️ Using dummy model - app may not work properly")
+        try:
+            # Import required modules
+            from sklearn.model_selection import train_test_split
+            from sklearn.preprocessing import LabelEncoder
+            from sklearn.svm import SVC
+            import os
+            
+            # Load training data
+            dataset = pd.read_csv('datasets/Training.csv')
+            print(f"📊 Training dataset shape: {dataset.shape}")
+            
+            # Prepare features and target
+            X = dataset.drop('prognosis', axis=1)
+            y = dataset['prognosis']
+            
+            # Encode target variable
+            le = LabelEncoder()
+            Y = le.transform(y)
+            
+            # Split data for training
+            X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=20)
+            
+            # Train the model
+            svc = SVC(kernel='linear', probability=True)  # Added probability for better predictions
+            svc.fit(X_train, y_train)
+            
+            # Calculate accuracy
+            accuracy = svc.score(X_test, y_test)
+            print(f"✅ Model trained successfully with accuracy: {accuracy:.4f}")
+            
+            # Try to save the model (optional, won't fail if can't save)
+            try:
+                os.makedirs('models', exist_ok=True)
+                pickle.dump(svc, open('models/svc.pkl', 'wb'))
+                print("💾 Model saved for future use")
+            except:
+                print("⚠️ Could not save model, but it's loaded in memory")
+            
+            return True
+            
+        except Exception as train_error:
+            print(f"❌ Critical error during model training: {train_error}")
+            return False
+
+# Initialize model
+if not load_or_train_model():
+    print("💥 Failed to load or train model. App may not work properly.")
+    # Create a dummy SVC as absolute fallback
+    from sklearn.svm import SVC
+    svc = SVC(kernel='linear')
 
 
 #============================================================
